@@ -1,64 +1,60 @@
 import streamlit as st
 import pandas as pd
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_experimental.agents import create_pandas_dataframe_agent
 
-# --- UI Setup ---
+# 1. Page Configuration
 st.set_page_config(page_title="FMCG AI Assistant", layout="wide")
-st.title("Beverages Category: AI Assistant")
-st.markdown("Ask natural language questions about promotions, inventory, and sales.")
+st.title("📊 FMCG AI Assistant")
 
-# --- API Key Input ---
-api_key = st.sidebar.text_input("Enter Google Gemini API Key", type="password")
-st.sidebar.markdown("*(Get a free key from Google AI Studio)*")
-
-# --- Load the Datasets ---
-@st.cache_data
-def load_data():
-    sales = pd.read_csv("sales_and_promotions.csv")
-    inventory = pd.read_csv("inventory.csv")
-    products = pd.read_csv("product_master.csv")
-    stores = pd.read_csv("store_master.csv")
-    return sales, inventory, products, stores
-
+# 2. Access your API key securely from Streamlit Secrets
+# This replaces any st.text_input() for the API key!
 try:
-    df_sales, df_inventory, df_products, df_stores = load_data()
-    st.sidebar.success("✅ 4 Datasets Loaded Successfully")
-except Exception as e:
-    st.error(f"Error loading data: {e}. Make sure the CSVs are in the same folder as this script.")
+    api_key = st.secrets["GOOGLE_API_KEY"]
+except KeyError:
+    st.error("API Key not found. Please set it in Streamlit Cloud Secrets.")
     st.stop()
 
-# --- User Interaction ---
-user_question = st.text_input("What would you like to know?", placeholder="e.g., Which product had the highest revenue during a promotion?")
+# 3. Load your data (Replace with your actual file paths)
+@st.cache_data
+def load_data():
+    # Ensure these files are in your GitHub repo
+    df_sales = pd.read_csv("sales_data.csv") 
+    df_inventory = pd.read_csv("inventory_data.csv")
+    return df_sales, df_inventory
 
-if st.button("Analyze Data") and user_question:
-    if not api_key:
-        st.warning("Please enter your Gemini API Key in the sidebar first.")
-    else:
-        with st.spinner("The AI is analyzing the datasets. Please wait..."):
-            try:
-                # Initialize the LLM - UPDATED TO CURRENT GEMINI MODEL
-                llm = ChatGoogleGenerativeAI(
-                    model="gemini-3.5-flash", 
-                    google_api_key=api_key, 
-                    temperature=0
-                )
+df_sales, df_inventory = load_data()
 
-                # Create the Data Agent (Passing all 4 tables)
-                agent = create_pandas_dataframe_agent(
-                    llm,
-                    [df_sales, df_inventory, df_products, df_stores],
-                    verbose=True,
-                    allow_dangerous_code=True # Required by LangChain to run pandas queries
-                )
+# 4. Initialize the LLM and Agent
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
 
-                # Execute the query
-                response = agent.invoke(user_question)
-                
-                st.success("Analysis Complete")
-                st.info(response["output"])
-                
-            except Exception as e:
-                st.error("An error occurred during analysis.")
-                st.code(str(e))
-                st.markdown("**Debugging Note:** The LLM occasionally writes invalid pandas code. Try rephrasing your question to be more specific.")
+agent = create_pandas_dataframe_agent(
+    llm, 
+    [df_sales, df_inventory], 
+    verbose=True,
+    max_iterations=4,           # Prevents infinite loops
+    handle_parsing_errors=True  # Stops crashes on formatting issues
+)
+
+# 5. Chat Interface
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Handle user input
+if prompt := st.chat_input("Ask a question about your data..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        try:
+            response = agent.invoke(prompt)
+            st.markdown(response['output'])
+            st.session_state.messages.append({"role": "assistant", "content": response['output']})
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
