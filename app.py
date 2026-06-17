@@ -8,21 +8,20 @@ st.set_page_config(page_title="FMCG AI Assistant", layout="wide")
 st.title("📊 FMCG AI Assistant")
 
 # 2. Access your API key securely from Streamlit Secrets
-# This replaces any st.text_input() for the API key!
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
 except KeyError:
     st.error("API Key not found. Please set it in Streamlit Cloud Secrets.")
     st.stop()
 
-# 3. Load your data (Replace with your actual file paths)
+# 3. Load your data (Updated with correct filenames from your GitHub)
 @st.cache_data
 def load_data():
-    # Ensure these files are in your GitHub repo
-    df_sales = pd.read_csv("sales_data.csv") 
-    df_inventory = pd.read_csv("inventory_data.csv")
+    df_sales = pd.read_csv("sales_and_promotions.csv") 
+    df_inventory = pd.read_csv("inventory.csv")
     return df_sales, df_inventory
 
+# Load the data
 df_sales, df_inventory = load_data()
 
 # 4. Initialize the LLM and Agent
@@ -32,8 +31,8 @@ agent = create_pandas_dataframe_agent(
     llm, 
     [df_sales, df_inventory], 
     verbose=True,
-    max_iterations=4,           # Prevents infinite loops
-    handle_parsing_errors=True  # Stops crashes on formatting issues
+    max_iterations=4,           
+    handle_parsing_errors=True  
 )
 
 # 5. Chat Interface
@@ -53,6 +52,7 @@ if prompt := st.chat_input("Ask a question about your data..."):
 
     with st.chat_message("assistant"):
         try:
+            # The agent processes the prompt using the loaded dataframes
             response = agent.invoke(prompt)
             st.markdown(response['output'])
             st.session_state.messages.append({"role": "assistant", "content": response['output']})
