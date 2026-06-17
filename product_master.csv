@@ -1,0 +1,16 @@
+product_id,product_name,brand,category,sub_category,pack_size_ml,unit_price
+BEV-001,Spark Lemon 500ml,Spark,Carbonated,Sparkling Water,500,2.5
+BEV-002,Spark Berry 500ml,Spark,Carbonated,Sparkling Water,500,2.5
+BEV-003,AquaPure 1L,AquaPure,Water,Still Water,1000,1.5
+BEV-004,AquaPure 500ml,AquaPure,Water,Still Water,500,1.0
+BEV-005,Energy Surge,Surge,Energy,Energy Drink,330,3.0
+BEV-006,Energy Surge Zero,Surge,Energy,Energy Drink,330,3.0
+BEV-007,Orchard Apple 1L,Orchard,Juice,Fruit Juice,1000,4.0
+BEV-008,Orchard Orange 1L,Orchard,Juice,Fruit Juice,1000,4.0
+BEV-009,DairyRich Iced Coffee,DairyRich,Dairy,Iced Coffee,250,3.5
+BEV-010,DairyRich Chocolate Milk,DairyRich,Dairy,Flavored Milk,250,2.0
+BEV-011,Fizz Cola 330ml,Fizz,Carbonated,Cola,330,1.8
+BEV-012,Fizz Diet Cola 330ml,Fizz,Carbonated,Cola,330,1.8
+BEV-013,SportHydrate Blue,SportHydrate,Water,Sports Drink,750,2.8
+BEV-014,SportHydrate Red,SportHydrate,Water,Sports Drink,750,2.8
+BEV-015,Mango Tango 500ml,Orchard,Juice,Fruit Juice,500,2.2
