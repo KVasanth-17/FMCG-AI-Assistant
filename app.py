@@ -25,10 +25,10 @@ def load_data():
 df_sales, df_inventory = load_data()
 
 # 4. Initialize the LLM and Agent
-# Using gemini-1.5-flash for speed and reliability
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=api_key)
+# Updated to gemini-3.5-flash (the current stable model for June 2026)
+llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash", google_api_key=api_key)
 
-# The allow_dangerous_code=True parameter is required in recent LangChain updates
+# Added allow_dangerous_code=True for agent initialization
 agent = create_pandas_dataframe_agent(
     llm, 
     [df_sales, df_inventory], 
