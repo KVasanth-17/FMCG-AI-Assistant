@@ -37,6 +37,7 @@ agent = create_pandas_dataframe_agent(
 # 5. UI Layout
 with st.sidebar:
     st.header("💡 How to use")
+    st.write("Ask me anything about your FMCG data!")
     st.info("• 'Show me the first 5 rows of sales data.'\n• 'Which product has the highest stock?'\n• 'What was the total revenue in the last month?'")
 
 st.title("📊 FMCG AI Assistant")
@@ -44,41 +45,35 @@ st.title("📊 FMCG AI Assistant")
 # --- KPI Metrics Section ---
 col1, col2, col3 = st.columns(3)
 
-# !!! REPLACE THESE WITH YOUR ACTUAL COLUMN NAMES !!!
-# Example: If your column is 'Stock', use df_inventory['Stock']
-# Example: If your column is 'Revenue', use df_sales['Revenue']
-try:
-    total_products = len(df_inventory)
-    low_stock = len(df_inventory[df_inventory['YOUR_STOCK_COLUMN_NAME'] < 50])
-    total_revenue = df_sales['YOUR_REVENUE_COLUMN_NAME'].sum()
+# Metrics calculated using correct column names from your CSVs
+total_products = len(df_inventory)
+low_stock = len(df_inventory[df_inventory['closing_stock'] < 50])
+total_revenue = df_sales['revenue'].sum()
 
-    col1.metric("Total Products", total_products)
-    col2.metric("Low Stock Items", low_stock)
-    col3.metric("Total Revenue", f"${total_revenue:,.0f}")
-except KeyError as e:
-    st.error(f"Column name error: {e}. Please check your CSV column headers.")
-    st.write("Current columns in Inventory:", df_inventory.columns.tolist())
-    st.write("Current columns in Sales:", df_sales.columns.tolist())
-
+col1.metric("Total Products", total_products)
+col2.metric("Low Stock Items", low_stock)
+col3.metric("Total Revenue", f"${total_revenue:,.0f}")
 st.write("---")
 
 # Quick-start buttons
 col1, col2, col3 = st.columns(3)
 if col1.button("📉 View Sales Trends"):
-    st.session_state.temp_prompt = "Summarize the sales trends from the data."
+    st.session_state.temp_prompt = "Summarize the sales trends from the sales_and_promotions data."
 if col2.button("📦 Check Low Stock"):
-    st.session_state.temp_prompt = "Identify items with low stock."
+    st.session_state.temp_prompt = "Identify items in the inventory with less than 50 units."
 if col3.button("💰 Best Selling Product"):
-    st.session_state.temp_prompt = "Which product generated the most revenue?"
+    st.session_state.temp_prompt = "Which product in the sales data generated the highest revenue?"
 
 # 6. Chat Interface
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Display history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# Process input
 prompt = st.chat_input("Ask a question about your data...")
 final_prompt = None
 if "temp_prompt" in st.session_state and st.session_state.temp_prompt:
@@ -91,8 +86,9 @@ if final_prompt:
     st.session_state.messages.append({"role": "user", "content": final_prompt})
     with st.chat_message("user"):
         st.markdown(final_prompt)
+
     with st.chat_message("assistant"):
-        with st.spinner("Analyzing..."):
+        with st.spinner("Analyzing data..."):
             try:
                 response = agent.invoke(final_prompt)
                 st.markdown(response['output'])
